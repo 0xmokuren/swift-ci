@@ -1,0 +1,17 @@
+# GitHub Actions の version 更新を週次で自動 PR します。
+# swift-format / Swift toolchain / base image の更新は意図的に対象外で、
+# 必要なときに build-image.yml を手動 dispatch する運用です。
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(deps)"
