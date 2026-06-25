@@ -12,9 +12,9 @@ on:
         type: string
         default: "Sources/ Tests/"
       image:
-        description: swift-format 同梱 container image
+        description: swift-format 同梱 container image (digest or version tag で pin 推奨)
         type: string
-        default: "ghcr.io/0xmokuren/swift-ci:latest"
+        default: "ghcr.io/0xmokuren/swift-ci:swift6.0-sf602.0.0"
       strict:
         description: --strict を付与するか
         type: boolean

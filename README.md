@@ -29,17 +29,12 @@ on:
 
 jobs:
   swift-format:
-    uses: 0xmokuren/swift-ci/.github/workflows/swift-format-lint.yml@main
+    uses: 0xmokuren/swift-ci/.github/workflows/swift-format-lint.yml@v1
     with:
       paths: "Sources/ Tests/"
 ```
 
-`image` 入力でタグを pin することもできます (再現性が必要なとき推奨):
-
-```yaml
-    with:
-      image: ghcr.io/0xmokuren/swift-ci:swift6.0-sf602.0.0
-```
+reusable workflow の default image は `ghcr.io/0xmokuren/swift-ci:swift6.0-sf602.0.0` で固定済みです。バージョン違いを使いたい時のみ `image:` を override してください。さらに厳密にしたい場合は image digest (`ghcr.io/0xmokuren/swift-ci@sha256:...`) や reusable workflow を commit SHA で参照する形も使えます。
 
 ## 初期セットアップ手順
 
