@@ -1,0 +1,70 @@
+name: Build swift-format image
+
+# swift-format 入り container image を build して ghcr に push します。
+# 通常は Dockerfile 変更時 or 手動 dispatch のみ動作するので、
+# 利用側 (TypeForge 等) の毎 PR では走らせません。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - .github/workflows/build-image.yml
+  workflow_dispatch:
+    inputs:
+      swift_tag:
+        description: Swift toolchain tag (docker hub library/swift)
+        required: false
+        default: "6.0"
+      sf_version:
+        description: swift-format release tag (swiftlang/swift-format)
+        required: false
+        default: "602.0.0"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve inputs
+        id: vars
+        run: |
+          set -eu
+          swift_tag="${{ github.event.inputs.swift_tag }}"
+          sf_version="${{ github.event.inputs.sf_version }}"
+          : "${swift_tag:=6.0}"
+          : "${sf_version:=602.0.0}"
+          echo "swift_tag=$swift_tag" >> "$GITHUB_OUTPUT"
+          echo "sf_version=$sf_version" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${{ github.repository_owner }}/swift-ci" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          build-args: |
+            SWIFT_TAG=${{ steps.vars.outputs.swift_tag }}
+            SF_VERSION=${{ steps.vars.outputs.sf_version }}
+          tags: |
+            ${{ steps.vars.outputs.image }}:swift${{ steps.vars.outputs.swift_tag }}-sf${{ steps.vars.outputs.sf_version }}
+            ${{ steps.vars.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

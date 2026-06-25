@@ -1,0 +1,40 @@
+name: swift-format lint (reusable)
+
+# 他リポから workflow_call で呼ぶ reusable workflow です。
+# pre-build 済みの container image (ghcr.io/<owner>/swift-ci) で
+# swift-format lint を走らせるので、毎 PR で source build が走りません。
+
+on:
+  workflow_call:
+    inputs:
+      paths:
+        description: swift-format に渡すターゲット (space 区切り)
+        type: string
+        default: "Sources/ Tests/"
+      image:
+        description: swift-format 同梱 container image
+        type: string
+        default: "ghcr.io/0xmokuren/swift-ci:latest"
+      strict:
+        description: --strict を付与するか
+        type: boolean
+        default: true
+
+jobs:
+  swift-format:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: swift-format lint
+        shell: bash
+        run: |
+          set -eu
+          flags="--recursive"
+          if [ "${{ inputs.strict }}" = "true" ]; then
+            flags="$flags --strict"
+          fi
+          # shellcheck disable=SC2086
+          swift-format lint $flags ${{ inputs.paths }}
